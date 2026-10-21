@@ -39,140 +39,143 @@
 
 ## What This Does
 
-<!-- Your community, and what your classifier sorts posts into. Three or four
-     sentences. -->
-
-
+TakeMeter classifies posts from r/personalfinance by the main financial question the author is asking. Each post gets exactly one of four labels: `debt_credit`, `saving_budgeting`, `investing_retirement`, or `financial_services_other`. Many posts mention several topics at once (savings *and* a credit card, a 401(k) *and* a tax bill), so the label follows the decision the author wants help with, not every financial term in the post. The classifier is a fine-tuned DistilBERT model trained on 200 posts I collected and labelled.
 
 ---
 
 ## Label Taxonomy
 
-<!-- Each label: a one-sentence definition and two real examples from your
-     reading. Then your decision rule for the hardest boundary.
+The full taxonomy, including an AI-generated stress test of the boundaries, is in [data/finance_taxonomy.md](data/finance_taxonomy.md).
 
-     The decision rule is worth a point on its own and it's the thing most
-     people leave out. Every taxonomy has a hardest boundary. Name yours. -->
+### `debt_credit`
 
-### `label_one`
-
-**Definition:**
+**Definition:** The post is mainly about existing debt, borrowing, loan repayment, interest rates, credit cards, or credit history.
 
 **Example 1:**
->
+> *Capital One refused hardship, interest reduction, and settlement. What options do I have left?* ([1xawqqp](https://www.reddit.com/r/personalfinance/comments/1xawqqp/)). The author has credit card debt and was denied hardship relief, so the question is how to repay it.
 
 **Example 2:**
->
+> *Is a balance transfer my best option?* ([1xb3u0a](https://www.reddit.com/r/personalfinance/comments/1xb3u0a/)). The author wants to cut credit card interest with a balance transfer.
 
-### `label_two`
+### `saving_budgeting`
 
-**Definition:**
+**Definition:** The post is mainly about managing income and expenses, savings goals, emergency funds, or whether something is affordable.
 
 **Example 1:**
->
+> *Can I afford $1000 rent under these circumstances?* ([1xaw18c](https://www.reddit.com/r/personalfinance/comments/1xaw18c/)). The author lists income and expenses and asks whether the rent fits.
 
 **Example 2:**
->
+> *Anxiety With Buying a Home* ([1xa9708](https://www.reddit.com/r/personalfinance/comments/1xa9708/)). The author compares renting with buying, based on income, savings and expected housing costs.
+
+### `investing_retirement`
+
+**Definition:** The post is mainly about investment decisions, investment accounts, asset allocation, or long-term retirement planning.
+
+**Example 1:**
+> *401k investing but don't understand* ([1xawpn3](https://www.reddit.com/r/personalfinance/comments/1xawpn3/)). The author wants help understanding the fund choices and performance in their 401(k).
+
+**Example 2:**
+> *How can I retire early?* ([1xad68f](https://www.reddit.com/r/personalfinance/comments/1xad68f/)). The author just started a higher-paying job and asks how to plan for early retirement.
+
+### `financial_services_other`
+
+**Definition:** The post is mainly about taxes, insurance, banking procedures, employment benefits, or other financial paperwork that doesn't fit the first three labels.
+
+**Example 1:**
+> *State garnished my bank account for back taxes* ([1xb9g5m](https://www.reddit.com/r/personalfinance/comments/1xb9g5m/)). The author is trying to resolve a state tax collection and find the records to support their case.
+
+**Example 2:**
+> *Baby on the way, should I get life insurance through my work?* ([1xargmo](https://www.reddit.com/r/personalfinance/comments/1xargmo/)). The author compares employer life insurance with buying a policy elsewhere.
 
 ### The hardest boundary
 
-**Which two labels:**
+**Which two labels:** `saving_budgeting` and `debt_credit`. Posts constantly weigh savings against debt ("should I use my emergency fund to pay off my card?"), and both labels fit on the surface. A close second is `investing_retirement` vs. `financial_services_other` for retirement accounts: rollovers, HSAs and pensions are partly investing and partly paperwork.
 
 **The decision rule I used every time:**
-<!-- e.g. "If the post names a specific checkable fact, it's `analysis`, even
-     if the tone is heated." -->
-
-
+Label the decision the author is asking for help with, not the topics they mention. If the action is repaying or taking on debt (paying down a card, taking a loan to build credit), it's `debt_credit`, even if savings are involved. If the question is whether a cost fits their income or how to split up cash, it's `saving_budgeting`. For retirement accounts: choosing what to invest in or how much to contribute is `investing_retirement`. Eligibility, contribution rules, transfers and paperwork are `financial_services_other`.
 
 ---
 
 ## The Dataset
 
-<!-- Where you collected from, how you labelled, your counts, and three hard
-     cases. -->
+**Where the posts came from:** r/personalfinance, from the subreddit's public RSS feed (`/r/personalfinance.rss` and `/new.rss`), posted between October 15 and 20, 2026. I kept only posts with body text; crossposts that showed only a title were skipped. Every post is stored whole as `title + body`, with its Reddit ID in the `note` column. There are no duplicates.
 
-**Where the posts came from:**
-
-**How I labelled them:** <!-- Cold first? Pre-labelled with AI and corrected?
-Say so plainly — the disclosure is required, not penalised. -->
+**How I labelled them:** I labelled the first 20 posts myself, without AI suggestions (`note` = `cold`). The other 180 were pre-labelled by an AI model using my definitions and decision rule, and I kept the AI's suggested labels (`note` = `AI-suggested`). 33 of the borderline posts have a `REVIEW:` note naming the two labels in tension.
 
 **Counts per label:**
 
 | Label | Count | Share |
 |---|---|---|
-|  |  |  |
-|  |  |  |
-|  |  |  |
-| **Total** |  | 100% |
+| `saving_budgeting` | 57 | 28.5% |
+| `investing_retirement` | 56 | 28.0% |
+| `debt_credit` | 47 | 23.5% |
+| `financial_services_other` | 40 | 20.0% |
+| **Total** | 200 | 100% |
+
+No label exceeds 40% of the dataset (criterion 3).
 
 **Three hard cases**
 
-<!-- Any post that made you pause: what it was, which two labels it could have
-     been, and what you chose. These are worth more than the easy 190. -->
-
 **1.**
-> *The post:*
+> *The post:* "Mom died, she left me money. Idk what to really do" ([1xb1omh](https://www.reddit.com/r/personalfinance/comments/1xb1omh/)). A 28-year-old has $200k in life insurance, $100k in investments, and their mom's $5–10k of credit card debt. They want to "stretch that out as long as we can / only use it for emergencies."
 >
-> *Could have been:*
+> *Could have been:* `financial_services_other` (life insurance, the estate, who pays the mom's card debt) or `saving_budgeting`.
 >
-> *I chose, because:*
+> *I chose `saving_budgeting`, because:* the author says the goal is to make the money last and keep it for emergencies. The insurance and estate questions are steps toward that goal. The AI suggested `financial_services_other`; I kept my own label.
 
 **2.**
-> *The post:*
+> *The post:* "First car: Financing a car VS paying cash" ([1xau77y](https://www.reddit.com/r/personalfinance/comments/1xau77y/)). A 23-year-old has enough savings to buy a used car outright but is thinking of taking a loan to build credit.
 >
-> *Could have been:*
+> *Could have been:* `saving_budgeting` (spending savings on a big purchase) or `debt_credit`.
 >
-> *I chose, because:*
+> *I chose `debt_credit`, because:* they can already afford the car. The real question is whether borrowing will help their credit history.
 
 **3.**
-> *The post:*
+> *The post:* "Should I stay at a government job that I'm not happy at just because it has a pension?" ([1x9v7m0](https://www.reddit.com/r/personalfinance/comments/1x9v7m0/)). A 29-year-old in local government with a state pension and a 14% match is comparing it with private jobs that offer a 401(k) match.
 >
-> *Could have been:*
+> *Could have been:* `financial_services_other` (a pension is an employment benefit) or `investing_retirement`.
 >
-> *I chose, because:*
+> *I chose `investing_retirement`, because:* the decision they're weighing is which retirement setup leaves them better off long term. The job itself is the context, not the question.
 
 ---
 
 ## The Training Run
 
-<!-- Your starting model, your settings, and anything you changed and why. -->
+**Base model:** `distilbert-base-uncased`
 
-**Base model:**
-
-**Settings:** <!-- epochs, learning rate, batch size, seed -->
+**Settings:** 3 epochs, learning rate 2e-5, batch size 16, max length 128 tokens, seed 42. These are the notebook's defaults. It ran on CPU (`torch 2.14.1+cpu`) and took about 2 minutes.
 
 **Anything I changed from the defaults, and why:**
+Nothing yet. The default run left the model undertrained. Training loss only went from 1.38 to 1.35. A model that guesses evenly among four labels has a loss of about 1.386, so this one barely got past guessing. Validation accuracy was 0.45, test accuracy was 0.367 (macro F1 0.23), and it never predicted `debt_credit` or `financial_services_other`. With 139 training posts at batch size 16, 3 epochs is only 27 gradient steps. My next run raises the epochs and the learning rate, and I'll judge that change by validation accuracy, not the test score. <!-- TODO: after the retrain, record the new settings and the val/test numbers here. -->
 
-**Split sizes:** <!-- train / val / test, and per-label counts in the test
-split. If a label had fewer than about 8 in test, say so — it explains a lot
-of next unit's variance. -->
+**Split sizes:** 139 train / 31 val / 30 test (70/15/15, stratified, seed 42).
 
+| Label | Train | Val | Test |
+|---|---|---|---|
+| `debt_credit` | 33 | 7 | 7 |
+| `saving_budgeting` | 39 | 9 | 9 |
+| `investing_retirement` | 39 | 9 | 8 |
+| `financial_services_other` | 28 | 6 | 6 |
 
+Two labels have fewer than 8 test posts: `debt_credit` (7) and `financial_services_other` (6). One misclassified post moves their recall by 14–17 points, so I expect their scores to swing between seeds in unit 6.
 
 ---
 
 ## How I Used AI
 
-<!-- Two specific moments — what you asked, what came back, what you changed.
-
-     ⚠️ Plus disclosure of any pre-labelling. If you had a model pre-label a
-     batch and then read and corrected every one, say that. It's an allowed
-     workflow and disclosing it costs you nothing. Not disclosing it is the
-     problem. -->
-
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I had 187 labelled posts and asked Claude (Claude Code) to create 13 more posts to reach 200.
+- *What came back:* It declined to write synthetic posts. My criteria and taxonomy require 200 *real* Reddit posts, and posts written to fit my definitions would inflate the results. Instead it pulled posts from r/personalfinance RSS pages I pasted in. It checked each post's Reddit ID against `labels.csv` (the first page was almost all duplicates) and added 13 new posts, mostly to the two smallest labels, each with a suggested label.
+- *What I changed:* I supplied the real feed pages instead of accepting generated text. The 13 posts are marked `AI-suggested` like the rest.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* Before writing the labels, I had an AI generate eight short ambiguous posts to stress-test my taxonomy ([finance_taxonomy.md](data/finance_taxonomy.md), section 4).
+- *What came back:* Posts that sat exactly on my boundaries, such as "use my emergency fund to pay off my card?" and "increase emergency savings or contribute more to my 401(k)?"
+- *What I changed:* I added four decision rules (section 5 of the taxonomy): label the main question; label the requested action, not the account type; keep immediate budgeting separate from retirement strategy; and use `financial_services_other` only for genuine admin, tax, insurance or benefit questions, not as a catch-all. The synthetic posts are not in the dataset.
 
-**Pre-labelling disclosure:**
+**Pre-labelling disclosure:** Yes. 20 posts were labelled cold by me with no AI input. The other 180 were pre-labelled by an AI model, and those labels were kept as suggested. The `note` column says which is which: `cold` or `AI-suggested`. Where I recorded an AI suggestion that differed from my cold label (1xb1omh, hard case 1), I kept my own label. Because 90% of the labels are AI-suggested, the staff agreement check in unit 6 (criterion 4) is the main evidence of whether they're applied consistently. Claude Code also helped set up the notebook, revise criteria 4 and 5 before training (see `criteria.md`), and run the first training pass.
 
 <!-- ═══════════════════════ UNIT 6 — THE TEST ═══════════════════════
 
