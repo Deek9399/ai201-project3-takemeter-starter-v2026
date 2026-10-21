@@ -51,65 +51,79 @@ whether you hit them:
 
 ---
 
-## 1.
+# TakeMeter — Acceptance Criteria
 
-<!-- Your criterion. It must name a number. -->
+## Project Overview
 
+TakeMeter is a text classification project that categorizes posts from r/personalfinance into four financial topics:
 
+- `debt_credit`
+- `saving_budgeting`
+- `investing_retirement`
+- `financial_services_other`
 
-**Why this target:**
+The following acceptance criteria define the minimum standards for the dataset and classifier. These targets are established before model training.
 
+## 1. Overall Classification Accuracy
 
+**Target:** At least 80% accuracy on the held-out test dataset.
 
----
+**Measurement:** Divide the number of correctly classified posts by the total number of test posts.
 
-## 2.
+**Rationale:** I chose 80% because I want TakeMeter to correctly identify the primary financial topic for most posts, while recognizing that some posts discuss multiple financial issues and may be difficult to classify.
 
-<!-- Your criterion. -->
+## 2. Per-Label Recall
 
+**Target:** At least 70% recall for each of the four labels.
 
+**Measurement:** Calculate recall independently for each category using:
 
-**Why this target:**
+Recall = True Positives / (True Positives + False Negatives)
 
+**Rationale:** I chose 70% because overall accuracy alone might hide poor performance on less common categories. I want the classifier to recognize posts across all four financial topics rather than favoring one category.
 
+## 3. Dataset Class Balance
 
----
+**Target:** No single label should represent more than 40% of the 200-post dataset.
 
-## 3.
+**Measurement:** Count the number of posts assigned to each label. Each category must contain no more than 80 posts.
 
-<!-- Your criterion. -->
+**Rationale:** I chose this threshold to prevent one category from dominating the dataset. Maintaining a reasonable distribution should help the model learn distinctions between financial topics instead of relying too heavily on the most common label.
 
+## 4. Independent Human Annotation Agreement
 
+**Target:** At least 85% agreement between two independent human annotators on a shared sample of 40 posts.
 
-**Why this target:**
+**Measurement:** Both annotators independently classify the same 40 posts using the finalized label definitions. Agreement is calculated as:
 
+Agreement = (Number of Identically Labeled Posts / 40) × 100
 
+At least 34 of the 40 posts must receive matching labels.
 
----
+**Rationale:** I chose 85% because I want the label definitions to be understandable and consistently applied by different people. High agreement would provide evidence that the categories are sufficiently clear for reliable annotation.
 
-## 4.
+## 5. High-Confidence Prediction Accuracy
 
-<!-- Your criterion. -->
+**Target:** At least 85% accuracy among test predictions with a confidence score of 0.80 or higher.
 
+**Measurement:** Identify held-out test predictions where the model's highest predicted class probability is at least 0.80. Calculate the percentage of those predictions that are correct.
 
+If no predictions reach the confidence threshold, this criterion is not met. The number and percentage of qualifying predictions will also be reported.
 
-**Why this target:**
+**Rationale:** I chose this criterion because I want predictions that the model considers highly confident to be more reliable. It will help me evaluate whether confidence scores are useful for distinguishing clearer classifications from uncertain ones.
 
+## Evaluation Plan
 
+- **Dataset:** 200 unique, eligible Reddit posts with manually reviewed labels.
+- **Data split:** 80% training and 20% testing, stratified by label.
+- **Test set:** Approximately 40 posts.
+- **Human agreement sample:** 40 independently annotated posts.
+- **Evaluation:** All five acceptance criteria will be assessed against their predefined numerical targets.
+- **Timing:** These criteria will be finalized and committed before model training begins.
 
----
+## Success Definition
 
-## 5.
-
-<!-- Your criterion. -->
-
-
-
-**Why this target:**
-
-
-
----
+TakeMeter will meet its acceptance criteria only when all five targets are satisfied. Any unmet criterion will be documented in the final project evaluation rather than changing its target after reviewing the results.
 
 <!-- ─────────────────────────────────────────────────────────────────────────
      UNIT 6 — read this before you change anything above.
