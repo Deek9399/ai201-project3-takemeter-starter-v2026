@@ -102,6 +102,10 @@ At least 34 of the 40 posts must receive matching labels.
 
 **Rationale:** I chose 85% because I want the label definitions to be understandable and consistently applied by different people. High agreement would provide evidence that the categories are sufficiently clear for reliable annotation.
 
+> **Revised before training:** At least 85% agreement between my labels and the staff labels on the 30-post staff set (`data/staff_posts.csv`), labelled under the staff taxonomy in `data/staff_taxonomy.md` and measured with `agreement.py`. At least 26 of the 30 posts must match.
+>
+> **Why revised:** The original needed a second independent annotator, and I don't have one, so it could not be measured. The staff set is the agreement check the course provides. I kept the 85% target: if I can't apply someone else's written rules that consistently, I have less reason to trust that my own 200 labels are consistent.
+
 ## 5. High-Confidence Prediction Accuracy
 
 **Target:** At least 85% accuracy among test predictions with a confidence score of 0.80 or higher.
@@ -112,12 +116,17 @@ If no predictions reach the confidence threshold, this criterion is not met. The
 
 **Rationale:** I chose this criterion because I want predictions that the model considers highly confident to be more reliable. It will help me evaluate whether confidence scores are useful for distinguishing clearer classifications from uncertain ones.
 
+> **Revised before training:** At least 85% accuracy on the most-confident third of held-out test predictions, as reported by the notebook (`confidence.accuracy_most_confident_third` in `results.json`).
+>
+> **Why revised:** The notebook does not record per-prediction confidence, so the 0.80 cutoff could not be checked against its output. It does report accuracy for the most- and least-confident thirds. I kept the 85% target, and the question is the same: when the model is most sure, is it right?
+
 ## Evaluation Plan
 
 - **Dataset:** 200 unique, eligible Reddit posts with manually reviewed labels.
-- **Data split:** 80% training and 20% testing, stratified by label.
-- **Test set:** Approximately 40 posts.
-- **Human agreement sample:** 40 independently annotated posts.
+- **Data split:** 70% training, 15% validation and 15% testing, stratified by label (the notebook's split).
+- **Test set:** 30 posts, roughly 6–9 per label.
+- **Human agreement sample:** The 30-post staff set, compared with `agreement.py` (see criterion 4).
+- **Seeds:** In unit 6 each target must hold on all three seeds.
 - **Evaluation:** All five acceptance criteria will be assessed against their predefined numerical targets.
 - **Timing:** These criteria will be finalized and committed before model training begins.
 
