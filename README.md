@@ -285,11 +285,13 @@ Seed 42 (the notebook's section 7 uses the first seed), 30 test posts:
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Overall accuracy | ≥ 0.80 | MISSED | 0.367 / 0.433 / 0.433. No seed comes within 35 points of the target. |
+| 2 | Per-label recall | ≥ 0.70 for every label | MISSED | `financial_services_other` recall is 0.00 on all three seeds, and `debt_credit` is 0.00 / 0.14 / 0.00. The target needs every label above 0.70 on every seed; at least two labels fall short on all three. |
+| 3 | Largest label's share of the dataset | ≤ 40% | MET | `saving_budgeting` is 57 of 200 = 28.5%. This depends on the dataset, not the split, so it holds on every seed. |
+| 4 | Agreement with the staff set | ≥ 85% (26 of 30) | NOT YET MEASURED | `data/staff_labels.csv` hasn't arrived from my TF, so `agreement.py` can't run. Also, the 30 staff-set labels were assigned by Claude, not me (see the Agreement Report), so even once measured it won't test my own labelling the way this criterion intended. |
+| 5 | Accuracy of the most-confident third | ≥ 0.85 | MISSED | 0.70 / 0.50 / 0.60 (10 posts per third). Seed 42's 0.70 is the closest, and it is still 15 points short. |
+
+**No criteria revised.** All five could be measured. I missed 1, 2 and 5, and missing a target is not a reason to change it. Criteria 4 and 5 were already revised before training, for measurability (see `criteria.md`).
 
 **Diagnoses**
 
@@ -302,6 +304,23 @@ Seed 42 (the notebook's section 7 uses the first seed), 30 test posts:
      have that can tell a LABELLING problem from a MODEL problem, and this
      section is graded on whether you used it that way. -->
 
+**One cause behind all three misses: the model barely trained.** Criteria 1, 2 and 5 fail for the same reason, and the evidence points to the training run rather than to my labels or to the task.
+
+- *The loss barely moved.* Training loss went from 1.38 to 1.35. A model guessing evenly among four labels scores about 1.386. With 139 training posts, batch size 16 and 3 epochs, the model got only 27 gradient steps at a learning rate of 2e-5.
+- *It is barely more confident than a coin toss.* Mean confidence in its chosen label is 0.28–0.30 on every seed, right or wrong. Uniform guessing over four labels gives 0.25.
+- *It only uses two labels.* Across 90 test predictions over three seeds, it chose `debt_credit` once and `financial_services_other` never. Everything else went to `saving_budgeting` or `investing_retirement`.
+- *Its errors have no stable direction.* On seed 42 the biggest confusion is `saving_budgeting` → `investing_retirement` (5 posts, 1 the other way). On seed 7 it reverses: `investing_retirement` → `saving_budgeting` (5, 0 the other way). If I had applied one boundary inconsistently, the training data would push the errors the same way on every split. A direction that flips with the split is what a model with no real preference looks like.
+
+**Why it isn't "a task the model can't reach from 200 examples."** The zero-shot baseline had no training at all. Given only the four bare label names, it scored 0.700 accuracy on the same 30 test posts. Its per-label F1 was 0.80 on `debt_credit` and 0.545 on `financial_services_other`, the two labels my model never predicts. The signal for all four labels is in the text, and my labels line up with it most of the time, so the task is reachable.
+
+**Criterion 2 (per-label recall), by label:**
+- `financial_services_other` (0.00 on every seed). This is my smallest label: 40 posts, 28 in training, 6 in each test split. Size alone doesn't explain a total zero, though. `debt_credit` has 47 posts and is also near zero, while the two labels the model predicts have 56–57. The gap between 40–47 and 56–57 is small. An undertrained model drifts toward the slightly more common labels, and these two lose out. Their small size is a real secondary cause: with 6–7 test posts, one post moves recall by 14–17 points. That is why `debt_credit` F1 swings from 0.00 to 0.25 across seeds.
+- `financial_services_other` is also my catch-all label (taxes, insurance, banking, benefits). It has no single vocabulary the way "401k" or "credit card" does, so I expect it to stay my hardest label even after a proper training run.
+
+**Criterion 5 (most-confident third).** The confidence ranking means something: the most-confident third beats the least-confident third on every seed (0.70 vs 0.10, 0.50 vs 0.30, 0.60 vs 0.20). But "most confident" here is a probability of about 0.3. The criterion can't be met until the model is actually confident, which is the same undertraining problem.
+
+**What the agreement report can and can't add.** It is the instrument that separates a labelling problem from a model problem, and I don't have its result yet: the staff labels haven't arrived. Even when they do, the staff-set labels were assigned by Claude, not by me, so the rate will say how consistently the staff rules can be applied. It won't show how consistently I applied my own. So I can't rule out inconsistency in my 200 labels, 90% of which are AI-suggested. What I can say is that none of the evidence above points to it: the errors don't hold a direction across seeds, and an untrained zero-shot model agrees with my labels 70% of the time. The fix I'll try first is the training budget (more epochs, higher learning rate), judged on validation accuracy. If the misses survive a model that actually trains, labelling becomes the leading suspect.
+
 
 
 ---
@@ -313,6 +332,8 @@ Seed 42 (the notebook's section 7 uses the first seed), 30 test posts:
      Remember you labelled these 30 under the STAFF taxonomy in
      data/staff_taxonomy.md, not your own — so every argument below is made
      from those definitions and those decision rules. -->
+
+**Who labelled:** the 30 labels in `my_staff_labels.csv` were assigned by Claude (an AI model) under the staff taxonomy, at my request. I did not label them myself. This rate therefore measures how an AI model applies the staff rules, not how I apply them, and it is weaker evidence about the consistency of my own 200 labels than criterion 4 intended.
 
 **Agreement rate:** ___ / 30 = ___%
 
