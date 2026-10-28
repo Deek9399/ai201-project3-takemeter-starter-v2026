@@ -1,0 +1,209 @@
+[
+  {
+    "seed": 42,
+    "n_test": 30,
+    "accuracy": 0.7,
+    "f1_macro": 0.689935064935065,
+    "per_label": {
+      "debt_credit": {
+        "precision": 0.75,
+        "recall": 0.8571428571428571,
+        "f1": 0.8,
+        "support": 7
+      },
+      "saving_budgeting": {
+        "precision": 0.6363636363636364,
+        "recall": 0.7777777777777778,
+        "f1": 0.7,
+        "support": 9
+      },
+      "investing_retirement": {
+        "precision": 0.8333333333333334,
+        "recall": 0.625,
+        "f1": 0.7142857142857143,
+        "support": 8
+      },
+      "financial_services_other": {
+        "precision": 0.6,
+        "recall": 0.5,
+        "f1": 0.5454545454545454,
+        "support": 6
+      }
+    },
+    "confusion": {
+      "debt_credit": {
+        "debt_credit": 6,
+        "saving_budgeting": 0,
+        "investing_retirement": 0,
+        "financial_services_other": 1
+      },
+      "saving_budgeting": {
+        "debt_credit": 0,
+        "saving_budgeting": 7,
+        "investing_retirement": 1,
+        "financial_services_other": 1
+      },
+      "investing_retirement": {
+        "debt_credit": 0,
+        "saving_budgeting": 3,
+        "investing_retirement": 5,
+        "financial_services_other": 0
+      },
+      "financial_services_other": {
+        "debt_credit": 2,
+        "saving_budgeting": 1,
+        "investing_retirement": 0,
+        "financial_services_other": 3
+      }
+    },
+    "confidence": {
+      "mean_when_right": 0.4638057053089142,
+      "mean_when_wrong": 0.3966316282749176,
+      "accuracy_most_confident_third": 1.0,
+      "accuracy_least_confident_third": 0.6,
+      "n_per_third": 10
+    },
+    "device": "cpu",
+    "device_name": "CPU",
+    "torch_version": "2.14.1+cpu",
+    "max_length": 128
+  },
+  {
+    "seed": 7,
+    "n_test": 30,
+    "accuracy": 0.5,
+    "f1_macro": 0.48758169934640516,
+    "per_label": {
+      "debt_credit": {
+        "precision": 0.6,
+        "recall": 0.8571428571428571,
+        "f1": 0.7058823529411765,
+        "support": 7
+      },
+      "saving_budgeting": {
+        "precision": 0.4444444444444444,
+        "recall": 0.4444444444444444,
+        "f1": 0.4444444444444444,
+        "support": 9
+      },
+      "investing_retirement": {
+        "precision": 0.42857142857142855,
+        "recall": 0.375,
+        "f1": 0.4,
+        "support": 8
+      },
+      "financial_services_other": {
+        "precision": 0.5,
+        "recall": 0.3333333333333333,
+        "f1": 0.4,
+        "support": 6
+      }
+    },
+    "confusion": {
+      "debt_credit": {
+        "debt_credit": 6,
+        "saving_budgeting": 0,
+        "investing_retirement": 0,
+        "financial_services_other": 1
+      },
+      "saving_budgeting": {
+        "debt_credit": 2,
+        "saving_budgeting": 4,
+        "investing_retirement": 2,
+        "financial_services_other": 1
+      },
+      "investing_retirement": {
+        "debt_credit": 1,
+        "saving_budgeting": 4,
+        "investing_retirement": 3,
+        "financial_services_other": 0
+      },
+      "financial_services_other": {
+        "debt_credit": 1,
+        "saving_budgeting": 1,
+        "investing_retirement": 2,
+        "financial_services_other": 2
+      }
+    },
+    "confidence": {
+      "mean_when_right": 0.48069947957992554,
+      "mean_when_wrong": 0.4141593873500824,
+      "accuracy_most_confident_third": 0.6,
+      "accuracy_least_confident_third": 0.1,
+      "n_per_third": 10
+    },
+    "device": "cpu",
+    "device_name": "CPU",
+    "torch_version": "2.14.1+cpu",
+    "max_length": 128
+  },
+  {
+    "seed": 2024,
+    "n_test": 30,
+    "accuracy": 0.7333333333333333,
+    "f1_macro": 0.7304437564499483,
+    "per_label": {
+      "debt_credit": {
+        "precision": 0.75,
+        "recall": 0.8571428571428571,
+        "f1": 0.8,
+        "support": 7
+      },
+      "saving_budgeting": {
+        "precision": 0.6,
+        "recall": 0.6666666666666666,
+        "f1": 0.631578947368421,
+        "support": 9
+      },
+      "investing_retirement": {
+        "precision": 0.7777777777777778,
+        "recall": 0.875,
+        "f1": 0.8235294117647058,
+        "support": 8
+      },
+      "financial_services_other": {
+        "precision": 1.0,
+        "recall": 0.5,
+        "f1": 0.6666666666666666,
+        "support": 6
+      }
+    },
+    "confusion": {
+      "debt_credit": {
+        "debt_credit": 6,
+        "saving_budgeting": 1,
+        "investing_retirement": 0,
+        "financial_services_other": 0
+      },
+      "saving_budgeting": {
+        "debt_credit": 1,
+        "saving_budgeting": 6,
+        "investing_retirement": 2,
+        "financial_services_other": 0
+      },
+      "investing_retirement": {
+        "debt_credit": 0,
+        "saving_budgeting": 1,
+        "investing_retirement": 7,
+        "financial_services_other": 0
+      },
+      "financial_services_other": {
+        "debt_credit": 1,
+        "saving_budgeting": 2,
+        "investing_retirement": 0,
+        "financial_services_other": 3
+      }
+    },
+    "confidence": {
+      "mean_when_right": 0.46406152844429016,
+      "mean_when_wrong": 0.4283257722854614,
+      "accuracy_most_confident_third": 0.7,
+      "accuracy_least_confident_third": 0.5,
+      "n_per_third": 10
+    },
+    "device": "cpu",
+    "device_name": "CPU",
+    "torch_version": "2.14.1+cpu",
+    "max_length": 128
+  }
+]

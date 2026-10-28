@@ -146,7 +146,9 @@ No label exceeds 40% of the dataset (criterion 3).
 **Settings:** 3 epochs, learning rate 2e-5, batch size 16, max length 128 tokens, seed 42. These are the notebook's defaults. It ran on CPU (`torch 2.14.1+cpu`) and took about 2 minutes.
 
 **Anything I changed from the defaults, and why:**
-Nothing yet. The default run left the model undertrained. Training loss only went from 1.38 to 1.35. A model that guesses evenly among four labels has a loss of about 1.386, so this one barely got past guessing. Validation accuracy was 0.45, test accuracy was 0.367 (macro F1 0.23), and it never predicted `debt_credit` or `financial_services_other`. With 139 training posts at batch size 16, 3 epochs is only 27 gradient steps. My next run raises the epochs and the learning rate, and I'll judge that change by validation accuracy, not the test score. <!-- TODO: after the retrain, record the new settings and the val/test numbers here. -->
+Nothing yet. The default run left the model undertrained. Training loss only went from 1.38 to 1.35. A model that guesses evenly among four labels has a loss of about 1.386, so this one barely got past guessing. Validation accuracy was 0.45, test accuracy was 0.367 (macro F1 0.23), and it never predicted `debt_credit` or `financial_services_other`. With 139 training posts at batch size 16, 3 epochs is only 27 gradient steps. I planned to raise both epochs and learning rate, but changed only one thing so the effect could be attributed.
+
+**Retrain (unit 6):** epochs 3 → 10, everything else unchanged (90 gradient steps instead of 27). At 10 epochs, validation accuracy reached 0.677 / 0.613 / 0.710 and test accuracy 0.700 / 0.500 / 0.733 across seeds 42 / 7 / 2024. `results.json` still holds the original 3-epoch seed-42 run, which the Baseline vs. Trained table uses. The 10-epoch numbers are in `results_three_seeds_after.json` and "The Improvement" below.
 
 **Split sizes:** 139 train / 31 val / 30 test (70/15/15, stratified, seed 42).
 
@@ -176,6 +178,17 @@ Two labels have fewer than 8 test posts: `debt_credit` (7) and `financial_servic
 - *What I changed:* I added four decision rules (section 5 of the taxonomy): label the main question; label the requested action, not the account type; keep immediate budgeting separate from retirement strategy; and use `financial_services_other` only for genuine admin, tax, insurance or benefit questions, not as a catch-all. The synthetic posts are not in the dataset.
 
 **Pre-labelling disclosure:** Yes. 20 posts were labelled cold by me with no AI input. The other 180 were pre-labelled by an AI model, and those labels were kept as suggested. The `note` column says which is which: `cold` or `AI-suggested`. Where I recorded an AI suggestion that differed from my cold label (1xb1omh, hard case 1), I kept my own label. Because 90% of the labels are AI-suggested, the staff agreement check in unit 6 (criterion 4) is the main evidence of whether they're applied consistently. Claude Code also helped set up the notebook, revise criteria 4 and 5 before training (see `criteria.md`), and run the first training pass.
+
+**Moment 3 (unit 6: finding patterns in my errors)**
+
+- *What I asked for:* Claude Code ran the baseline, the three-seed runs and the retrain, and drafted the verdicts and diagnoses from the results files.
+- *What came back:* Four patterns I hadn't spotted. (1) In the 3-epoch runs, across 90 test predictions over three seeds, the model chose `debt_credit` once and `financial_services_other` never, and its average confidence (0.29) was barely above a four-way guess (0.25). (2) The biggest confusion changed direction between seeds (`saving_budgeting` → `investing_retirement` on seed 42, the reverse on seed 7). It read that as a model guessing rather than a boundary I'd labelled inconsistently, and that pointed my one improvement at training (epochs 3 → 10) rather than relabelling. (3) Running the baseline with and without my definitions showed my definitions made the zero-shot model *worse* (0.467 vs. 0.700 with bare label names). (4) Seed 42 reproduced my original `results.json` exactly, so CPU runs are repeatable.
+- *What I changed:* I used the training diagnosis to choose the improvement, and it held up: accuracy rose on every seed. Claude did not run the notebook top to bottom in Jupyter. It ran the notebook's own code for sections 1–3 and 6–7 as a script, so that `results.json` and `test_split.csv`, which the baseline comparison reads, weren't overwritten.
+
+**Unit 6 disclosures:**
+- The sentence under "What I predicted before I looked" was written by Claude before the baseline ran, not by me.
+- The 30 labels in `my_staff_labels.csv` were assigned by Claude at my request (see the Agreement Report). Criterion 4 therefore doesn't yet measure my own labelling.
+- The README text in the unit 6 sections was drafted by Claude from the results files, and I reviewed it.
 
 <!-- ═══════════════════════ UNIT 6 — THE TEST ═══════════════════════
 
@@ -383,39 +396,62 @@ Seed 42 (the notebook's section 7 uses the first seed), 30 test posts:
 
 ## The Improvement
 
-**What I changed:**
+**What I changed:** One training setting: epochs from 3 to 10. Learning rate (2e-5), batch size (16), max length (128), the data and the three seeds are unchanged. That takes the model from 27 to 90 gradient steps. Section 6 ran with `RUN_LABEL = "after"`, so the before numbers in `results_three_seeds_before.json` were not overwritten.
 
-**Which diagnosis pointed at it:**
+**Which diagnosis pointed at it:** All three misses traced to a model that barely trained. Loss went from 1.38 to 1.35 against a random-guess 1.386, average confidence was 0.29, and across 90 test predictions it chose `debt_credit` once and `financial_services_other` never. The zero-shot baseline reached 0.700 on the same posts, so the task was reachable and the training budget was the bottleneck. I didn't relabel or add data, because none of the evidence pointed at my labels or at a missing label.
 
 ### Run Log — After
 
-Default settings (3 epochs, lr 2e-5, batch 16, max length 128), trained on CPU (torch 2.14.1+cpu). Full results in `results_three_seeds_before.json`. Seed 42 reproduced `results.json` exactly.
+10 epochs, lr 2e-5, batch 16, max length 128, trained on CPU (torch 2.14.1+cpu). Full results in `results_three_seeds_after.json`.
 
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1. Overall accuracy | ≥ 0.80 | 0.367 | 0.433 | 0.433 | MISSED |
-| 2. Per-label recall (lowest label) | ≥ 0.70 for every label | 0.00 (`debt_credit`, `financial_services_other`) | 0.00 (`financial_services_other`) | 0.00 (`debt_credit`, `financial_services_other`) | MISSED |
-| 3. Largest label's share of the dataset | ≤ 40% | 28.5% | 28.5% | 28.5% | MET (a property of the dataset, so it is the same on every seed) |
+| 1. Overall accuracy | ≥ 0.80 | 0.700 | 0.500 | 0.733 | MISSED |
+| 2. Per-label recall (lowest label) | ≥ 0.70 for every label | 0.50 (`financial_services_other`) | 0.33 (`financial_services_other`) | 0.50 (`financial_services_other`) | MISSED |
+| 3. Largest label's share of the dataset | ≤ 40% | 28.5% | 28.5% | 28.5% | MET (unchanged; the data didn't change) |
 | 4. Agreement with the staff set | ≥ 85% (26 of 30) | n/a | n/a | n/a | Not yet measured (`agreement.py`) |
-| 5. Accuracy of the most-confident third | ≥ 0.85 | 0.70 | 0.50 | 0.60 | MISSED |
+| 5. Accuracy of the most-confident third | ≥ 0.85 | 1.00 | 0.60 | 0.70 | MISSED (met on seed 42 only) |
 
 The spread across seeds, from the notebook's section 6:
 
 | Measure | Seed 42 | Seed 7 | Seed 2024 | Spread |
 |---|---|---|---|---|
-| Overall accuracy | 0.367 | 0.433 | 0.433 | 0.067 |
-| Macro F1 | 0.230 | 0.306 | 0.283 | 0.076 |
-| F1 — `debt_credit` | 0.000 | 0.250 | 0.000 | 0.250 |
-| F1 — `saving_budgeting` | 0.381 | 0.600 | 0.500 | 0.219 |
-| F1 — `investing_retirement` | 0.538 | 0.375 | 0.632 | 0.257 |
-| F1 — `financial_services_other` | 0.000 | 0.000 | 0.000 | 0.000 |
+| Overall accuracy | 0.700 | 0.500 | 0.733 | 0.233 |
+| Macro F1 | 0.690 | 0.488 | 0.730 | 0.243 |
+| F1 — `debt_credit` | 0.800 | 0.706 | 0.800 | 0.094 |
+| F1 — `saving_budgeting` | 0.700 | 0.444 | 0.632 | 0.256 |
+| F1 — `investing_retirement` | 0.714 | 0.400 | 0.824 | 0.424 |
+| F1 — `financial_services_other` | 0.545 | 0.400 | 0.667 | 0.267 |
 
-Accuracy moved 6.7 points across seeds. That is under the 10-point line, so the overall number is stable enough to read: on every split this model scores far below its targets. The per-label F1s are not stable. They swing 22–26 points because each label has only 6–9 test posts. Each seed's model also leans on a different label, which is a sign it hasn't learned much yet.
+Confusion matrix after, seed 42 (the same 30 posts as the before matrix and the baseline):
+
+| true \ predicted | debt_credit | saving_budgeting | investing_retirement | financial_services_other |
+|---|---|---|---|---|
+| **debt_credit** | 6 | 0 | 0 | 1 |
+| **saving_budgeting** | 0 | 7 | 1 | 1 |
+| **investing_retirement** | 0 | 3 | 5 | 0 |
+| **financial_services_other** | 2 | 1 | 0 | 3 |
 
 **Did it help, and how do I know:**
 
 <!-- If it didn't, say so. Relabelling that didn't help is a genuinely
      interesting result and earns full credit. -->
+
+Yes, a lot, on every seed. Still not enough to meet any target I missed.
+
+| Measure | Before (3 epochs) | After (10 epochs) |
+|---|---|---|
+| Accuracy, seeds 42 / 7 / 2024 | 0.367 / 0.433 / 0.433 | 0.700 / 0.500 / 0.733 |
+| Macro F1, seeds 42 / 7 / 2024 | 0.230 / 0.306 / 0.283 | 0.690 / 0.488 / 0.730 |
+| Final training loss | ~1.35 | 0.66–0.76 |
+| Mean confidence when right | 0.29–0.30 | 0.46–0.48 |
+| Test predictions of `debt_credit` / `financial_services_other` (of 90) | 1 / 0 | 26 / 12 |
+
+- **The diagnosis was right.** Accuracy rose by 7–33 points depending on the seed, and macro F1 roughly doubled or tripled. The model now predicts all four labels on every seed. `debt_credit` went from F1 0.00 to 0.71–0.80, and `financial_services_other` from 0.00 to 0.40–0.67. Validation accuracy (not used to pick anything) climbed from 0.32–0.45 after epoch 1 to 0.61–0.71 by epoch 10. Loss was still falling at epoch 10, but validation accuracy had mostly levelled off by epoch 5–7.
+- **No new criterion is met.** Accuracy, per-label recall and most-confident-third accuracy each come closer, and each still falls short on at least one seed. Criterion 5 reached 1.00 on seed 42 but only 0.60 on seed 7. A target that turns up on one seed is still a miss.
+- **The result is now unstable, which is a new diagnosis.** Accuracy moved 23 points across seeds (0.500 to 0.733), well past the 10-point line. Before, every seed was uniformly bad, so the spread was small. Now that the model has learned something, which 30 posts land in the test split matters. Seed 7 is the weak split on both validation (0.61) and test (0.50). With 6–9 test posts per label, one post moves a label's F1 by about 10–15 points. My dataset is too small for a stable measure at this level, so the next improvement should be more data, not more epochs.
+- **Against the baseline (seed 42, the same 30 posts):** the trained model now scores 0.700 accuracy / 0.690 macro F1. That beats the baseline with my definitions (0.467 / 0.411) and exactly ties the zero-shot model given only the bare label names (0.700 / 0.689). On this split, ten epochs of fine-tuning on 139 posts bought parity with a model that never saw my data, not an advantage.
+- **The biggest confusion after:** 3 real `investing_retirement` posts were called `saving_budgeting`, and 1 went the other way. That's the investing-vs-budgeting boundary my decision rules address ("keep immediate budgeting separate from retirement strategy"). It is now small enough that the agreement report, once I have it, is what can say whether it's my labelling or a genuinely hard pair.
 
 
 
@@ -425,11 +461,31 @@ Accuracy moved 6.7 points across seeds. That is under the 10-point line, so the 
 
 <!-- For each criterion still missed: what you'd do, and why you stopped. -->
 
+After the 10-epoch retrain, criteria 1, 2 and 5 are still missed and criterion 4 is still unmeasured. Underneath all of them is one problem: accuracy moves 23 points across seeds, so a single split can't tell me where the model really is.
+
+**1. Overall accuracy ≥ 0.80 (got 0.700 / 0.500 / 0.733).**
+- *What I'd do:* collect at least 100 more real r/personalfinance posts, spread across all four labels, and retrain at 10 epochs. More data attacks both the low average and the 23-point spread. A bigger test split also makes the number itself trustworthy: with 30 test posts, one post is 3.3 points.
+- *Why I stopped:* this unit allows one change, and I spent it on epochs because that's what the diagnosis named. More epochs wouldn't help further: validation accuracy levelled off by epoch 5–7 on every seed. Collecting and labelling 100 posts with the same care as the first 200 is the next unit of work, not a tweak.
+
+**2. Recall ≥ 0.70 for every label (lowest: `financial_services_other`, 0.50 / 0.33 / 0.50).**
+- *What I'd do:* add 30 real `financial_services_other` posts, my smallest label (40 posts) and the one with the worst F1 on every seed. Before that, re-read the 40 I have against decision rule 4 ("use `financial_services_other` only for genuine admin, tax, insurance or benefit questions, not as a catch-all"). 31 of them are AI-suggested labels I kept (the other 9 I labelled cold), so some may be catch-all leftovers that belong elsewhere.
+- *Why I stopped:* same one-change limit. I also can't yet tell whether `financial_services_other` is thin or inconsistently labelled, because the agreement check that would separate the two isn't done (see criterion 4).
+
+**4. Agreement with the staff set ≥ 85% (not measured).**
+- *What I'd do:* get `data/staff_labels.csv` from my TF, run `agreement.py`, and adjudicate every disagreement. For this to test what the criterion is about, I should also label the 30 staff posts myself. The current `my_staff_labels.csv` was labelled by Claude.
+- *Why I stopped:* the staff labels hadn't arrived when I wrote this.
+
+**5. Most-confident third ≥ 0.85 accurate (got 1.00 / 0.60 / 0.70).**
+- *What I'd do:* nothing aimed at confidence directly. Seed 42 shows the model's most-confident predictions can be fully right. The miss comes from the same instability as criterion 1, plus measuring on 10 posts per third, where one post is 10 points. The fix is the larger dataset above, and then re-checking this criterion on bigger test splits.
+- *Why I stopped:* there's no separate fix to try before the data problem is fixed.
+
 
 
 **The gap between what I meant my labels to capture and what the model
 learned:**
 <!-- Two sentences. Your confusion matrix is the evidence. -->
+
+I meant my labels to capture the decision the author is asking for help with, not the topics they mention, and the model learned that well only where the decision and the vocabulary coincide: `debt_credit` posts are about cards, loans and interest, and it gets 18 of 21 right across the three after-seeds. Where my rules depend on the action rather than the words, it hasn't learned them. It mixes up `investing_retirement` and `saving_budgeting` 13 times in both directions (8 + 5), and its errors on `financial_services_other` scatter across all three other labels (4 / 4 / 2 of 18), the pattern of a leftover bucket, not the defined admin category I wrote.
 
 
 
