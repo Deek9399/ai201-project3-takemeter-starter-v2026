@@ -230,29 +230,49 @@ My definitions made the baseline worse by 0.233 accuracy (7 posts). With bare na
 <!-- Five criteria across three seeds. The notebook's section 6 prints the
      spread table; the Target and Verdict columns are yours. -->
 
+Default settings (3 epochs, lr 2e-5, batch 16, max length 128), trained on CPU (torch 2.14.1+cpu). Full results in `results_three_seeds_before.json`. Seed 42 reproduced `results.json` exactly.
+
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Overall accuracy | ≥ 0.80 | 0.367 | 0.433 | 0.433 | MISSED |
+| 2. Per-label recall (lowest label) | ≥ 0.70 for every label | 0.00 (`debt_credit`, `financial_services_other`) | 0.00 (`financial_services_other`) | 0.00 (`debt_credit`, `financial_services_other`) | MISSED |
+| 3. Largest label's share of the dataset | ≤ 40% | 28.5% | 28.5% | 28.5% | MET (a property of the dataset, so it is the same on every seed) |
+| 4. Agreement with the staff set | ≥ 85% (26 of 30) | n/a | n/a | n/a | Not yet measured (`agreement.py`) |
+| 5. Accuracy of the most-confident third | ≥ 0.85 | 0.70 | 0.50 | 0.60 | MISSED |
+
+The spread across seeds, from the notebook's section 6:
+
+| Measure | Seed 42 | Seed 7 | Seed 2024 | Spread |
+|---|---|---|---|---|
+| Overall accuracy | 0.367 | 0.433 | 0.433 | 0.067 |
+| Macro F1 | 0.230 | 0.306 | 0.283 | 0.076 |
+| F1 — `debt_credit` | 0.000 | 0.250 | 0.000 | 0.250 |
+| F1 — `saving_budgeting` | 0.381 | 0.600 | 0.500 | 0.219 |
+| F1 — `investing_retirement` | 0.538 | 0.375 | 0.632 | 0.257 |
+| F1 — `financial_services_other` | 0.000 | 0.000 | 0.000 | 0.000 |
+
+Accuracy moved 6.7 points across seeds. That is under the 10-point line, so the overall number is stable enough to read: on every split this model scores far below its targets. The per-label F1s are not stable. They swing 22–26 points because each label has only 6–9 test posts. Each seed's model also leans on a different label, which is a sign it hasn't learned much yet.
 
 ### Confusion matrix
 
 <!-- ⚠️ TYPED AS A MARKDOWN TABLE. The notebook prints one ready to paste.
      An image of a matrix earns nothing. -->
 
-| true \ predicted |  |  |  |
-|---|---|---|---|
-| **** |  |  |  |
-| **** |  |  |  |
-| **** |  |  |  |
+Seed 42 (the notebook's section 7 uses the first seed), 30 test posts:
+
+| true \ predicted | debt_credit | saving_budgeting | investing_retirement | financial_services_other |
+|---|---|---|---|---|
+| **debt_credit** | 0 | 3 | 4 | 0 |
+| **saving_budgeting** | 0 | 4 | 5 | 0 |
+| **investing_retirement** | 0 | 1 | 7 | 0 |
+| **financial_services_other** | 0 | 4 | 2 | 0 |
 
 **My biggest off-diagonal number, and what it means:**
 <!-- Not "the model made mistakes" — WHICH boundary it didn't learn, and which
      direction. "7 real analysis posts were called hot_take and only 3 went the
      other way" is a direction, not just an error rate. -->
+
+5 real `saving_budgeting` posts were called `investing_retirement`, and only 1 went the other way. On seed 42 the model leans toward `investing_retirement` for anything about money it hasn't placed, and it never predicts `debt_credit` or `financial_services_other`. That direction doesn't hold across seeds, though. On seed 7, 5 real `investing_retirement` posts were called `saving_budgeting` and only 0 went the other way. On seed 2024, `saving_budgeting` again absorbs most errors. An undertrained model falls back on one or two default labels, and which ones depends on the split. So this off-diagonal says more about too little training than about a boundary I labelled inconsistently. The agreement report is what can confirm that.
 
 
 
@@ -348,13 +368,28 @@ My definitions made the baseline worse by 0.233 accuracy (7 posts). With bare na
 
 ### Run Log — After
 
+Default settings (3 epochs, lr 2e-5, batch 16, max length 128), trained on CPU (torch 2.14.1+cpu). Full results in `results_three_seeds_before.json`. Seed 42 reproduced `results.json` exactly.
+
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Overall accuracy | ≥ 0.80 | 0.367 | 0.433 | 0.433 | MISSED |
+| 2. Per-label recall (lowest label) | ≥ 0.70 for every label | 0.00 (`debt_credit`, `financial_services_other`) | 0.00 (`financial_services_other`) | 0.00 (`debt_credit`, `financial_services_other`) | MISSED |
+| 3. Largest label's share of the dataset | ≤ 40% | 28.5% | 28.5% | 28.5% | MET (a property of the dataset, so it is the same on every seed) |
+| 4. Agreement with the staff set | ≥ 85% (26 of 30) | n/a | n/a | n/a | Not yet measured (`agreement.py`) |
+| 5. Accuracy of the most-confident third | ≥ 0.85 | 0.70 | 0.50 | 0.60 | MISSED |
+
+The spread across seeds, from the notebook's section 6:
+
+| Measure | Seed 42 | Seed 7 | Seed 2024 | Spread |
+|---|---|---|---|---|
+| Overall accuracy | 0.367 | 0.433 | 0.433 | 0.067 |
+| Macro F1 | 0.230 | 0.306 | 0.283 | 0.076 |
+| F1 — `debt_credit` | 0.000 | 0.250 | 0.000 | 0.250 |
+| F1 — `saving_budgeting` | 0.381 | 0.600 | 0.500 | 0.219 |
+| F1 — `investing_retirement` | 0.538 | 0.375 | 0.632 | 0.257 |
+| F1 — `financial_services_other` | 0.000 | 0.000 | 0.000 | 0.000 |
+
+Accuracy moved 6.7 points across seeds. That is under the 10-point line, so the overall number is stable enough to read: on every split this model scores far below its targets. The per-label F1s are not stable. They swing 22–26 points because each label has only 6–9 test posts. Each seed's model also leans on a different label, which is a sign it hasn't learned much yet.
 
 **Did it help, and how do I know:**
 
