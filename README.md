@@ -189,20 +189,37 @@ Two labels have fewer than 8 test posts: `debt_credit` (7) and `financial_servic
 <!-- Both models on the same posts. `python baseline.py --trained results.json`
      prints this table for you. -->
 
+Baseline: `facebook/bart-large-mnli` zero-shot, prompted with the definitions in `label_definitions.txt`, scored on the 30 posts in `test_split.csv`. The trained model was tested on the same 30 posts (results in `baseline_results.json`).
+
 | Measure | Baseline | Trained | Difference |
 |---|---|---|---|
-| Overall accuracy |  |  |  |
-| Macro F1 |  |  |  |
-| F1 — `label_one` |  |  |  |
-| F1 — `label_two` |  |  |  |
+| Overall accuracy | 0.467 | 0.367 | -0.100 |
+| Macro F1 | 0.411 | 0.230 | -0.181 |
+| F1 — `debt_credit` | 0.500 | 0.000 | -0.500 |
+| F1 — `financial_services_other` | 0.000 | 0.000 | +0.000 |
+| F1 — `investing_retirement` | 0.714 | 0.538 | -0.176 |
+| F1 — `saving_budgeting` | 0.429 | 0.381 | -0.048 |
 
 **What I predicted before I looked:**
 <!-- Milestone 1 asks you to write this BEFORE seeing the trained numbers. A
      prediction made afterwards isn't one. -->
 
+My trained model is barely past guessing and never predicts `debt_credit` or `financial_services_other`, so I expect it to beat the zero-shot baseline only on `investing_retirement` (it predicts that label most of the time) and to lose on overall accuracy and macro F1.
+
 **What the gap actually means:**
 <!-- If the baseline matched your trained model, your fine-tuning added
      nothing — and that is a real finding, not a failure. Say it plainly. -->
+
+The fine-tuning added nothing yet. The zero-shot baseline beats my trained model on overall accuracy, macro F1 and every label except `financial_services_other`, where both score 0. My prediction was wrong on `investing_retirement`: the baseline beat it there too (0.714 vs. 0.538). That fits the Run Log: the default run barely trained (loss 1.38 → 1.35) and only ever predicted two labels. The baseline has its own bias. It put 19 of 30 posts in `saving_budgeting` and never predicted `financial_services_other`. So the result says my model is undertrained, not that the task is easy.
+
+**What my definitions were worth:** I ran the baseline twice on the same 30 posts, once with my definitions and once with only the bare label names:
+
+| Prompt | Accuracy | Macro F1 |
+|---|---|---|
+| My definitions (`label_definitions.txt`) | 0.467 | 0.411 |
+| Bare label names (no definitions file) | 0.700 | 0.689 |
+
+My definitions made the baseline worse by 0.233 accuracy (7 posts). With bare names, the predictions spread across all four labels (9/8/8/5). With my definitions, most posts went to `saving_budgeting`. The likely reason: each definition lists five or six loosely related topics. Almost any personal-finance post "discusses income, expenses or affordability," so the broad `saving_budgeting` list entails nearly everything. The bare name `financial_services_other` also did much better than my definition, which ends in a vague "other financial administrative matters." The prompt is fragile too: rewording two definitions to match this README exactly gave 0.400 accuracy instead of 0.467. On 30 posts that is 2 posts, so differences this small are noise. The table above uses my definitions as committed. The stronger bare-names baseline (0.700) is the bar my retrained model has to clear.
 
 
 
